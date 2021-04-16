@@ -26,8 +26,9 @@ package com.yariksoffice.lingver.store
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import org.json.JSONObject
-import java.util.Locale
+import java.util.*
 
 /**
  * Default implementation of [LocaleStore] using [SharedPreferences].
@@ -47,7 +48,14 @@ class PreferenceLocaleStore @JvmOverloads constructor(
             val language = json.getString(LANGUAGE_JSON_KEY)
             val country = json.getString(COUNTRY_JSON_KEY)
             val variant = json.getString(VARIANT_JSON_KEY)
-            Locale(language, country, variant)
+            val baseLocale = Locale(language, country, variant)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                val script = json.getString(SCRIPT_JSON_KEY)
+                Locale.Builder().setLocale(baseLocale).setScript(script).build()
+            } else {
+                baseLocale
+            }
         } else {
             defaultLocale
         }
@@ -58,6 +66,10 @@ class PreferenceLocaleStore @JvmOverloads constructor(
             put(LANGUAGE_JSON_KEY, locale.language)
             put(COUNTRY_JSON_KEY, locale.country)
             put(VARIANT_JSON_KEY, locale.variant)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                put(SCRIPT_JSON_KEY, locale.script)
+            }
         }
         prefs.edit().putString(LANGUAGE_KEY, json.toString()).apply()
     }
@@ -75,6 +87,7 @@ class PreferenceLocaleStore @JvmOverloads constructor(
         private const val FOLLOW_SYSTEM_LOCALE_KEY = "follow_system_locale_key"
         private const val DEFAULT_PREFERENCE_NAME = "lingver_preference"
         private const val LANGUAGE_JSON_KEY = "language"
+        private const val SCRIPT_JSON_KEY = "script"
         private const val COUNTRY_JSON_KEY = "country"
         private const val VARIANT_JSON_KEY = "variant"
     }
